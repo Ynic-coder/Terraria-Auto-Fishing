@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+dist/
+*.user
+tools/fishing-il.txt
+diagnostic.txt
+
+release/
+menu-preview.png
+
+artifacts/
+src/Assets/bridge.zip
+tools/background-il.txt
+background-diagnostic.txt
+
+injector-error.txt
