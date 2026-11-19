@@ -94,6 +94,7 @@ sealed class MemoryReader : IDisposable
         for (int i = 0; i < Math.Min(inv.Length, 58); i++)
             if ((i < 50 || i >= 54) && Valid(inv[i], "Item") && Int(inv[i], "Item", "bait") > 0)
                 bait += Math.Max(0, Int(inv[i], "Item", "stack"));
+        var catchIds = new List<int>();
         int bobbers = 0, catchId = 0; bool bite = false; float ai0 = 0, ai1 = 0;
         foreach (uint p in Array(U32(statics["projectile"]), 2048))
         {
@@ -105,12 +106,12 @@ sealed class MemoryReader : IDisposable
             if (!float.IsFinite(a0) || !float.IsFinite(a1) || !float.IsFinite(result)) throw new IOException("Нестабильное состояние поплавка.");
             ai0 = a0; ai1 = a1;
             // Same checks as Player.ItemCheck_PullFishingBobbers in installed 1.4.5.8.
-            if (a0 == 0 && a1 < 0 && result != 0) { bite = true; catchId = (int)result; }
+            if (a0 == 0 && a1 < 0 && result != 0) { bite = true; catchId = (int)result; catchIds.Add(catchId); }
         }
         // Recheck roots to reject a sample that crossed a world/player transition.
         if (Bool(statics["gameMenu"]) || I32(statics["myPlayer"]) != id) throw new IOException("Смена мира.");
         return new(false, Bool(statics["gamePaused"]), Flag(player, "Player", "dead"), Bool(statics["playerInventory"]) || Bool(statics["drawingPlayerChat"]) || Bool(statics["editSign"]) || Bool(statics["editChest"]) || Bool(statics["mapFullscreen"]) || Flag(player, "Player", "mouseInterface"),
-            Int(player, "Player", "itemAnimation") > 0 || Int(player, "Player", "itemTime") > 0, rod, bait, bobbers, bite, catchId, ai0, ai1, Name(Ref(player, "Player", "name")));
+            Int(player, "Player", "itemAnimation") > 0 || Int(player, "Player", "itemTime") > 0, rod, bait, bobbers, bite, catchId, ai0, ai1, Name(Ref(player, "Player", "name")), catchIds.ToArray());
     }
     public void Dispose() => Native.CloseHandle(handle);
 }
@@ -140,6 +141,7 @@ static class Native
         if (SendInput(1, [input], Marshal.SizeOf<INPUT>()) != 1) throw new IOException("Windows не приняла клик. Запустите игру и меню с одинаковыми правами.");
     }
 }
+
 
 
 

@@ -42,3 +42,18 @@ logic=Logic(); logic.Background=true; logic.Evaluate(bite,true,5000);
 Check(logic.Evaluate(bite,false,5080).Action==ActionKind.Hook,"Focus change does not reset background bite");
 Console.WriteLine($"PASS: {passed} state-machine checks");
 
+
+// Catch filtering must never hook a mixed or non-item bite.
+logic=Logic(); logic.FilterEnabled=true; logic.AllowedItems=new(){2337,2338};
+var wanted=bite with {CatchId=2337};
+logic.Evaluate(wanted,true,5000); Check(logic.Evaluate(wanted,true,5080).Action==ActionKind.Hook,"Selected item accepted");
+foreach(int id in new[]{1,-1,0,99}) { logic=Logic();logic.FilterEnabled=true;logic.AllowedItems=new(){2337}; var rejected=bite with{CatchId=id}; logic.Evaluate(rejected,true,5000);Check(logic.Evaluate(rejected,true,6000).Action==ActionKind.None,"Unselected item/enemy rejected"); }
+logic=Logic();logic.FilterEnabled=true;
+Check(!logic.Accepts(wanted),"Empty filter accepts nothing");
+logic.AllowedItems=new(){2337};
+Check(!logic.Accepts(wanted with{CatchIds=[2337,1]}),"Mixed multi-bobber bite rejected");
+Check(logic.Accepts(wanted with{CatchIds=[2337,2337]}),"Selected multi-bobber bite accepted");
+logic=Logic();logic.RecastDelay=0;
+logic.Evaluate(empty,true,200);Check(logic.Evaluate(empty,true,201).Action==ActionKind.Cast,"No hidden 2.5 second recast wait");
+Check(logic.Evaluate(empty with{Busy=true},true,5000).Action==ActionKind.None,"Animation gate retained at zero delay");
+Console.WriteLine($"PASS: {passed} total checks");
